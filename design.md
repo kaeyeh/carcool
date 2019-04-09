@@ -22,9 +22,11 @@
   - contract lock (no other dealer can take over) 
 ##  dealer fulfil order, Transfer token (minus commission fee) from Carcool to Dealer 
   - contract update intransit
+  - shipping info, insurance
 ##  contract expire, token transfer back to buyer
   - contract back to open
 ##  contract close, state to done.
+  - custom clear
  
 
 # implementation,

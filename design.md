@@ -1,4 +1,4 @@
-# data
+# data structure
 ## car (one to one map to contract)
   - vin, pics,
 ## account
@@ -9,6 +9,8 @@
   - buyer
   - seller
   - start date, expiration date
+  - insurance
+  - ship info
  
 # api
 ##  buyer create account,

@@ -1,5 +1,31 @@
 '''
-order api example,
+order api example (for option 2, selected)
+1. get balance with given address (for example 0x931D387731bBbC988B312206c74F77D004D6B84b)
+GET /getBalance/0x931D387731bBbC988B312206c74F77D004D6B84b 
+
+response:
+   {  
+      "result":"ok" 
+      "address":"0x931D387731bBbC988B312206c74F77D004D6B84b",
+      "balance":"123400"
+   }
+
+   or result with error string, such as, "result":"invalid address"
+
+2. for testing only, tranfer balance
+PUT /order/
+request:
+    {
+      "command":"transfer"
+      "sender":"address"
+      "receiver":"address"
+      "balance":"{number}"
+    }
+response
+   "ok"
+
+---------------------------------------------------
+order api example (for option 1, not considered)
 1. get list of orders
 curl localhost:5000/order
 [  
@@ -61,7 +87,7 @@ response: all the current order info
    so after 30 days if no seller accept, send back the payment, contract auto close
 
 4. seller accept contract, so no other seller can take over
-PUT /oder/{orderId}
+PUT /order/{orderId}
     {
       "seller":"BBCFid32",
     }
@@ -76,7 +102,8 @@ PUT /oder/{orderId}
 
 5. seller lock contract with necessary shipment reference, buyer can't withdrew
 payment to seller could usually start right now
-PUT /oder/{orderId}
+PUT /order/{orderId}
+request:
     {
       "shipmentRef":""
     }
@@ -115,6 +142,8 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 
+from collections import Counter
+ACCOUNTS = Counter()
 
 app = Flask(__name__)
 
@@ -146,8 +175,31 @@ def api_order_put():
     how to access infos like car balance, insurance proof, shipping proof in
     order to validate the seller really shipped the car
     '''
+    req = request.get_json()
+    if req is None:
+       return 'invalid request', 404
+    sender = req.get('sender', None)
+    if sender is None:
+       return 'sender empty', 404
+    receiver = req.get('receiver', None)
+    if receiver is None:
+       return 'receiver empty', 404
+    balance = req.get('balance', '0')
+    try:
+       balance = int(balance)
+    except:
+       return 'invalid balance', 404
+    if balance <= 0:
+       return 'balance is negative', 404
+    ACCOUNTS[sender] -= balance
+    ACCOUNTS[receiver] += balance
     data = 'ok'
     return jsonify(data)
+
+@app.route('/getBalance/<address>')
+def api_get_balance(address):
+   data = dict(result='ok', address=address, balance=ACCOUNTS[address])
+   return jsonify(data)
 
 if __name__ == '__main__':
     app.run()

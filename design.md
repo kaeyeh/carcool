@@ -53,6 +53,9 @@ seller receive commission fee from platform?
 ## given seller token address, platform as a proxy return the token balance. 
 
 # implementation,
-##  storage,
-##  token transfer,
+## storage,
+## token transfer,
+  - option 1, using existing ethereum wallet, such as metamask, mew or imtoken
+  - option 2, transfer private key, sender/receiver address and amount to proxy
+  - option 3, implement wallet function in app using web3 api, example Order.js
     

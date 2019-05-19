@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--[if IE]>
+  <script type='text/javascript'>
+    (function() {
+      var tag = document.getElementById('basetag');
+      tag.href = location.protocol + '//' + location.host + '/jsencrypt/';
+    }());
+  </script>
+  <![endif]-->
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <script src="/jsencrypt.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+    $(function () {
+        // generate public private key
+        $('#usergen').click(function () {
+            const crypt = new JSEncrypt({default_key_size: 1024})
+            const privateKey = crypt.getPrivateKey()
+            $('#privkey').html(privateKey);
+            const pubkey = crypt.getPublicKey();
+            $('#pubkey').html(pubkey);
+
+            fetch('/bind', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'sender': '0xabcd', 'pubkey': pubkey})
+            }).then((data) => data.text()).then((value) => {
+                console.log(value);
+            });           
+        });
+
+        $('#transferBalance').click(function () {
+            const senc = new JSEncrypt();
+            senc.setPublicKey($('#spubkey').val());
+            encrypted = senc.encrypt('150');            
+
+            const privateKey = $('#privkey').val();
+            const sign = new JSEncrypt();
+            sign.setPrivateKey(privateKey);
+            const signature = sign.sign('150', CryptoJS.SHA256, "sha256");            
+
+            $('#transferResult').html(signature);
+            fetch('/order', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'sender': '0xabcd',
+                 'receiver': '0xefgh',
+                 'balance': encrypted,
+                 'sign': signature})
+            }).then((data) => data.text()).then((value) => {
+                console.log(value);
+            });           
+        });        
+
+        // Run a quick encryption/decryption when they click.
+        $('#testme').click(function () {
+            // Encrypt with the public key...
+            var encrypt = new JSEncrypt();
+            encrypt.setPublicKey($('#pubkey').val());
+            const encrypted = encrypt.encrypt($('#input').val());
+
+            // Decrypt with the private key...
+            var decrypt = new JSEncrypt();
+            decrypt.setPrivateKey($('#privkey').val());
+            var uncrypted = decrypt.decrypt(encrypted);
+
+            // Now a simple check to see if the round-trip worked.
+            $('#testlog').html(uncrypted);
+            
+            const senc = new JSEncrypt();
+            senc.setPublicKey($('#spubkey').val());
+            $('#msgToServer').html(senc.encrypt($('#input').val()));            
+        });
+
+        $('#getBalance').click(() => {
+            fetch('/getBalance/0xabcd').then((res) => res.text()).then(balance => {
+                $('#balance').html(balance);
+            });
+        });
+    });
+</script>
+
+1. backend: assume user 0xabcd has wallet, address, balance, etc.<br/>
+<br/>
+<input id="usergen" type="button" value="2. User app generate key for signature"/><br/>
+User Private Key used to sign message, need to store locally with password<br/>
+<textarea id='privkey' rows=3 cols=65></textarea><br/>
+Send Public Key to server to verify the user<br/>
+<textarea id='pubkey' rows=3 cols=65></textarea><br/>
+</br>
+Encrypted Message to Server <br/>
+<textarea id="msgToServer" rows="3" cols="65"></textarea><br/>
+Server Public Key<br/>
+<textarea id="spubkey" rows="3" cols="65">-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC2b7RbKzLomX8XfRJ+U25N57w4
+uREhe/jFYdK5wDhJESQgKPnzbj4S/yufXpFXQQXdGFC5lBpcLHD/Am+MXYEyqfti
+C+gVQ16eh5k7myhu5Ke56w52pj0v7HtdUihF3YY8lHKLTUvTNzVHI0Mj28bQhIya
+HAbx2xau2FUhXLSHMQIDAQAB
+-----END PUBLIC KEY-----</textarea><br/>
+Text to encrypt max len 117:<br/>
+<textarea id="input" name="input" type="text" rows=3 cols=65>This is a test!</textarea><br/>
+
+<input id="testme" type="button" value="admin Test Me!!!"/><br/>
+<textarea id='testlog' cols=65></textarea><br/>
+<br/>
+<input id="transferBalance" type="button" value="transfer 150 balance"/><br/>
+<textarea id='transferResult' cols=65></textarea><br/>
+
+<input id="getBalance" type="button" value="get balance"/><br/>
+<textarea id='balance' cols=65></textarea><br/>
+
+</body>
+</html>

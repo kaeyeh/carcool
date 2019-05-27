@@ -5,7 +5,8 @@ const fs = require('fs')
 var express = require('express');
 var bodyParser = require('body-parser');
 var path = require('path');
-const NodeRSA = require('node-rsa')
+const NodeRSA = require('node-rsa');
+const order = require('./Order');
 
 
 var app = express();
@@ -41,6 +42,14 @@ function serverVerify( buffer, sig, address ) {
 const a='faixpvKRREQoFzwvjz4tX4PSNsCvBl2a4LfU3Izk31twg+DaxKX7UDIhEpiCzhUdPSVWHNgfde+OmVpgmaoTNgjHcmHDCKhqapP4KU4eXPL4fWL9rNsyHgAKy0R1gaW70xnv47A2VuXLRMGoccrnYXtpwPhAg1Gopv7M3nlIOLk=';
 serverDecrypt(a);
 
+// -------------- test token
+order.balanceOf('0x1E4B96345Eb7C6392e3923E29095083f5ED863B7');
+account = order.createAccount();
+console.log(account['address'], account['privateKey']);
+//order.transact(1,'0x1E4B96345Eb7C6392e3923E29095083f5ED863B7','0xf0D06A0e485D0B47ca2418041AdD2Fb1838a601e','');
+
+
+// ----------------------------------------------------------------
 app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
@@ -52,6 +61,14 @@ app.get('/jsencrypt.min.js', function(req, res) {
 
 // setup wallet binding, user use his purchase password to store his private key
 // send public key to server for signature verification
+app.get('/getNewAccount', function (req, res) 
+{
+  account = order.createAccount();
+  address = account['address'];
+  privateKey = account['privateKey'];
+  console.log( address );
+  res.end( JSON.stringify({'address': address, 'privateKey': privateKey}));
+})
 
 
 app.get('/getBalance/:address', function (req, res) {
